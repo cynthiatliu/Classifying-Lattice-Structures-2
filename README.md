@@ -1,7 +1,9 @@
 # Classifying-Lattice-Structures-2
-# Using a very meta predictor (a random forest that takes predictions from a random forest
-# which in itself takes predictions from its constituent trees) to try to predict the overarching
-# crystal structure for a crystal that contains planes at certain (h,k,l) combinations
+Using a very meta predictor (a random forest that takes predictions from a random forest
+which in itself takes predictions from its constituent trees) to try to predict the overarching
+crystal structure for a crystal that contains planes at certain (h,k,l) combinations
+
+#Details
 
 This is some additional work on the all-structures problem, putting us closer to a fully automated and accurate solution.
 The goal in this attempt was to see if, instead of trying to label individual points and achieve a plurality,
