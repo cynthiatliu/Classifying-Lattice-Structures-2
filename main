@@ -1,0 +1,103 @@
+#Main:
+#1. Generate many random coordinates
+#2. Label individual points using random forests
+#3. Label the entire group by known ordering
+#4. Feed to another random forest to teach
+#5. Create testing data, use the forest in 2 to classify individual points, and use the forest in 4 to classify the group
+#6. Write testing data to file and check accuracy
+
+import numpy as np
+import math
+from sklearn.ensemble import RandomForestClassifier
+from randomCoordinates import *
+
+def main():
+    #Making the forest for individual points
+    rawTrCoords = genCoords()
+    trCoords = buildTrain(rawTrCoords)
+    
+    X_tr = trCoords[:,0:9]
+    Y_tr = trCoords[:,-1]
+    clf1 = RandomForestClassifier(n_estimators=300)
+    clf1 = clf1.fit(X_tr, Y_tr)
+    
+    #Generating the first set of test coordinates
+    rawTestCoords = genCoords()
+    testCoords = buildTest(rawTestCoords)
+    X_test = testCoords[:]
+    
+    goodInput = False
+    while goodInput == False:
+        try:
+            ptsPerGroup = int(input("How many points would you like to have in one cluster? "))
+            testPositive = math.sqrt(ptsPerGroup-1)
+            goodInput = True
+        except:
+            print ("Please input a valid value (numerical value larger than or equal to 1)")
+    
+    #Making the training data        
+    totalPtCount = len(rawTrCoords)/7 #Total number of points per structure
+    trPointLabels = np.zeros([7*math.ceil(totalPtCount/ptsPerGroup),ptsPerGroup])
+    strucCounter = 0 #Number of structures we've been through
+    while strucCounter < 7:
+        count = 0 #basic counter - number of times we went through the loop
+        numGroups = 0 #Number of completed groups within a structure
+    
+        while numGroups < math.ceil(totalPtCount)/ptsPerGroup:
+            count = 0
+            while count < ptsPerGroup and count < totalPtCount - numGroups*ptsPerGroup:
+                index = strucCounter*totalPtCount + numGroups*ptsPerGroup + count
+                #print index
+                trPointLabels[strucCounter*len(trPointLabels)/7+numGroups][count] = clf1.predict(X_test[index])
+                count += 1
+    
+            print("Next group!")
+            numGroups += 1
+    
+        print ("Onto the next structure!")
+        strucCounter += 1
+        
+    #Labeling groups of points to complete the training set
+    targetVariables = np.zeros([len(trPointLabels)])
+    count = 0
+    for labelSet in trPointLabels:
+        groupLabel = math.floor(count/math.ceil((totalPtCount/ptsPerGroup)))
+        print groupLabel
+        targetVariables[count] = groupLabel
+        count += 1
+        
+    #Making the forest for groups of labels
+    clf2 = RandomForestClassifier(n_estimators=300)
+    clf2 = clf2.fit(trPointLabels,targetVariables)
+    print ("------------------------------------------")
+    
+    #Generating the second set of test coordinates
+    rawTrueCoords = genCoords()
+    trueCoords = buildTest(rawTrueCoords)
+    X_true = trueCoords[:]
+    
+    #Making test data - assuming groups are of the same size
+    testPointLabels = np.zeros([7*math.ceil(totalPtCount/ptsPerGroup),ptsPerGroup])
+    strucCounter = 0 #Number of structures we've been through
+    while strucCounter < 7:
+        count = 0 #basic counter - number of times we went through the loop
+        numGroups = 0 #Number of completed groups within a structure
+        
+        while numGroups < math.ceil(totalPtCount)/ptsPerGroup:
+            count = 0
+            while count < ptsPerGroup and count < totalPtCount - numGroups*ptsPerGroup:
+                index = strucCounter*totalPtCount + numGroups*ptsPerGroup + count
+                #print index
+                testPointLabels[strucCounter*len(testPointLabels)/7+numGroups][count] = clf1.predict(X_true[index])
+                count += 1
+        
+            print("Next group!")
+            numGroups += 1
+        
+        print ("Onto the next structure!")
+        strucCounter += 1
+        
+    Y_test = clf2.predict(testPointLabels)
+    print Y_test
+    
+main()
