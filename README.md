@@ -13,7 +13,7 @@ correctly labeled A, B, and C with each set containing two values of the same pa
 one of I or P based on what the actual coordinates were.
 
 It appears at first glance from the data that this method might work but not well. I will do statistical analysis soon.
-Here were the resulting predictions:
+Here were the resulting predictions (note that I do not know how to format the results properly):
 
 #Results
 [ 0.  0.  0.  0.  4.  2.  0.  1.  1.  3.  0.  0.  3.  3.  4.  0.  0.  5.
